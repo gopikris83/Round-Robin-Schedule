@@ -1,6 +1,6 @@
 # Round Robin Rotation Schedule
 
-This is repo is to fetch members from Slack user group like **Digital & IT Tech Leads** and rotate through the list to, for example schedule the hosting of the Tech Lead Forum with the members of this group.
+This is repo is to fetch members from Slack user group like **Digital & IT** and rotate through the list to, for example schedule the hosting of the Tech Lead Forum with the members of this group.
 
 
 ## How it works
@@ -12,6 +12,7 @@ This rotation schedule can be reused to any other rotation schedule use case by 
     - Input the channel id for sending notification
     - Input the file suffix (This will create a new file and add all the members included in the rotation by fetching through slack group)
     - Currently, the message body is not set as dynamic and this can be changed in the python script so that messages can be fed in the ENV parameters of the Github workflow created for every use cases.
-    - Invite SAS-Round-Robin App to your channel to get the notification schedule.
+    - Create and Install Custom Round Robin in Slack Workspace
+    - Invite Round-Robin App to your channel to get the notification schedule.
 
 That's it. The workflow should start to schedule the rotation!
