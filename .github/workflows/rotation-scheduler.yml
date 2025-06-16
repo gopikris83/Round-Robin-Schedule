@@ -1,0 +1,75 @@
+name: Tech Lead Forum Hosting Schedule
+on:
+  workflow_dispatch:
+  schedule:
+    # Runs the job every Monday at 9:00 AM CET
+    - cron: "0 9 * * 1"
+
+env:
+  # The date of the first run of the action. It has to be set to a date that is on the same weekday as the cron.
+  # 12/11 is Monday, so the cron is set to run on Monday.
+  # Every second week of the bi-weekly cycle, the action is going to be skipped.
+  # The cron time can be set to any time of the day.
+  # Below are the Inputs to the Rotation schedule passed to the Python script
+  FIRST_RUN_DATE: "2025-01-06"
+  SLACK_CHANNEL: ${{ vars.SLACK_CHANNEL }}
+  SLACK_USER_GROUP: ${{ vars.SLACK_USER_GROUP }}
+  MESSAGE_BODY:  "you are scheduled to host Tech Lead forum this week."
+  MESSAGE_BODY_NEXT: "will be hosting the next meeting."
+  FILE_SUFFIX: "tech_lead"
+
+jobs:
+  weekindex:
+    runs-on: ubuntu-latest
+    outputs:
+      weekindex: ${{ steps.calculate.outputs.weekindex }}
+    steps:
+
+    # This skips the job every alternative week so that the notification could be sent bi-weekly.
+    # Calculate the week index and skip if it's the second week
+    # Source code: https://github.com/wham/bi-weekly-action/blob/main/.github/workflows/bi-weekly-action.yml
+    - name: Calculate weekdiff
+      id: calculate
+      run: |
+        current_date=$(date +%Y-%m-%d)
+        start=$(date -d ${{ env.FIRST_RUN_DATE }} +%s)
+        end=$(date -d $current_date +%s)
+        weekdiff=$(((end-start) / 60 / 60 / 24 / 7))
+        weekindex=$((weekdiff % 2))
+        echo "weekindex=$weekindex" >> "$GITHUB_OUTPUT"
+        echo "FIRST_RUN_DATE: ${{ env.FIRST_RUN_DATE }}" >> $GITHUB_STEP_SUMMARY
+        echo "current_date: $current_date" >> $GITHUB_STEP_SUMMARY
+        echo "weekdiff: $weekdiff" >> $GITHUB_STEP_SUMMARY
+        echo "weekindex: $weekindex" >> $GITHUB_STEP_SUMMARY
+        if [ $weekindex -eq 0 ]; then
+          echo "🟢 It's the first week of the bi-weekly cycle. The action is going to run." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "🔴 It's the second week of the bi-weekly cycle. The action is going to be skipped." >> $GITHUB_STEP_SUMMARY
+        fi
+
+  set_variables:
+    runs-on: ubuntu-latest
+    outputs:
+      first_run_date: ${{ env.FIRST_RUN_DATE }}
+      slack_channel: ${{ env.SLACK_CHANNEL }}
+      slack_user_group: ${{ env.SLACK_USER_GROUP }}
+      message_body: ${{ env.MESSAGE_BODY }}
+      message_body_next: ${{ env.MESSAGE_BODY_NEXT }}
+      file_suffix: ${{ env.FILE_SUFFIX }}
+    steps:
+      - run: echo "Exposing env vars"
+
+  rotation:
+    if: ${{ needs.weekindex.outputs.weekindex == 0 }}
+    needs: 
+      - weekindex
+      - set_variables
+    uses: ./.github/workflows/rotate.yml
+    with:
+      first_run_date: ${{ needs.set_variables.outputs.first_run_date }}
+      slack_channel: ${{ needs.set_variables.outputs.slack_channel }}
+      slack_user_group: ${{ needs.set_variables.outputs.slack_user_group }}
+      message_body: ${{ needs.set_variables.outputs.message_body }}
+      message_body_next: ${{ needs.set_variables.outputs.message_body_next }}
+      file_suffix: ${{ needs.set_variables.outputs.file_suffix }}
+    secrets: inherit

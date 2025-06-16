@@ -1,0 +1,37 @@
+name: Team Devex -  Skip this week's Goalie
+on:
+  workflow_dispatch:
+
+env:
+  # Below are the Inputs to the Rotation schedule passed to the Python script
+  # FIRST_RUN_DATE: "2025-02-17" don't seem to be used
+  SLACK_CHANNEL: "C05TM0W7ECC"
+  # SLACK_USER_GROUP: "" we don't want to query group members for this one, we manually set the people in the rotation
+  MESSAGE_BODY: "will be the Goalie this week. Lets leave all those goalie shenanigans to them."
+  MESSAGE_BODY_NEXT: "will be goalie next week."
+  FILE_SUFFIX: "devex_goalie"
+
+jobs:
+  set_variables:
+    runs-on: ubuntu-latest
+    outputs:
+      # first_run_date: ${{ env.FIRST_RUN_DATE }}
+      slack_channel: ${{ env.SLACK_CHANNEL }}
+      # slack_user_group: ${{ env.SLACK_USER_GROUP }}
+      message_body: ${{ env.MESSAGE_BODY }}
+      message_body_next: ${{ env.MESSAGE_BODY_NEXT }}
+      file_suffix: ${{ env.FILE_SUFFIX }}
+    steps:
+      - run: echo "Exposing env vars"
+
+  next_goalie:
+    needs: set_variables
+    uses: ./.github/workflows/rotate.yml
+    with:
+      # first_run_date: ${{ needs.set_variables.outputs.first_run_date }}
+      slack_channel: ${{ needs.set_variables.outputs.slack_channel }}
+      # slack_user_group: ${{ needs.set_variables.outputs.slack_user_group }}
+      message_body: ${{ needs.set_variables.outputs.message_body }}
+      message_body_next: ${{ needs.set_variables.outputs.message_body_next }}
+      file_suffix: ${{ needs.set_variables.outputs.file_suffix }}
+    secrets: inherit

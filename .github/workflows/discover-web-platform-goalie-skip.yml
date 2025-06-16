@@ -1,0 +1,42 @@
+name: Team Discover - Web Platform Skip this week's Goalie
+on:
+  workflow_dispatch:
+
+env:
+  # The date of the first run of the action. It has to be set to a date that is on the same weekday as the cron.
+  # 12/11 is Monday, so the cron is set to run on Monday.
+  # Every second week of the bi-weekly cycle, the action is going to be skipped.
+  # The cron time can be set to any time of the day.
+  # Below are the Inputs to the Rotation schedule passed to the Python script
+  FIRST_RUN_DATE: "2025-02-17"
+  SLACK_CHANNEL: "C087PBM2D8U"
+  SLACK_USER_GROUP: "Commercial Web Platform Devs"
+  MESSAGE_BODY:  "will be the Goalie this week."
+  MESSAGE_BODY_NEXT: "will be hosting the next meeting."
+  FILE_SUFFIX: "discover_web_platform_goalie"
+
+jobs:
+  set_variables:
+    runs-on: ubuntu-latest
+    outputs:
+      first_run_date: ${{ env.FIRST_RUN_DATE }}
+      slack_channel: ${{ env.SLACK_CHANNEL }}
+      slack_user_group: ${{ env.SLACK_USER_GROUP }}
+      message_body: ${{ env.MESSAGE_BODY }}
+      message_body_next: ${{ env.MESSAGE_BODY_NEXT }}
+      file_suffix: ${{ env.FILE_SUFFIX }}
+    steps:
+      - run: echo "Exposing env vars"
+
+  next_goalie:
+    needs: set_variables
+    uses: ./.github/workflows/rotate.yml
+    with:
+      first_run_date: ${{ needs.set_variables.outputs.first_run_date }}
+      slack_channel: ${{ needs.set_variables.outputs.slack_channel }}
+      slack_user_group: ${{ needs.set_variables.outputs.slack_user_group }}
+      message_body: ${{ needs.set_variables.outputs.message_body }}
+      message_body_next: ${{ needs.set_variables.outputs.message_body_next }}
+      file_suffix: ${{ needs.set_variables.outputs.file_suffix }}
+    secrets: inherit
+

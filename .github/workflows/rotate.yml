@@ -1,0 +1,74 @@
+on:
+  workflow_call:
+    inputs:
+      first_run_date:
+        required: false
+        type: string
+      slack_channel:
+        required: true
+        type: string
+      slack_user_group:
+        required: false
+        type: string
+      message_body:
+        required: true
+        type: string
+      message_body_next:
+        required: true
+        type: string
+      file_suffix:
+        required: true
+        type: string
+
+env:
+  FIRST_RUN_DATE: ${{ inputs.first_run_date }}
+  SLACK_CHANNEL: ${{ inputs.slack_channel }}
+  SLACK_USER_GROUP: ${{ inputs.slack_user_group }}
+  SLACK_TOKEN: ${{ secrets.SLACK_ROUND_ROBIN_TOKEN }}
+  MESSAGE_BODY: ${{ inputs.message_body }}
+  MESSAGE_BODY_NEXT: ${{ inputs.message_body_next }}
+  FILE_SUFFIX: ${{ inputs.file_suffix }}
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Nora
+        uses: flysas-tech/community-gh-actions/actions/nora@nora-v1
+        id: nora
+        with:
+          private-key: ${{ secrets.ADG_NORA_VIKING_KEY }}
+      # Checkout the repository
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # persist-credentials: true
+          show-progress: true
+          token: ${{ steps.nora.outputs.token }}
+
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      # Install dependencies
+      - name: Install dependencies
+        run: pip install slack-sdk
+
+      # Run the rotation script and notify the next rotation in channel
+      - name: Run rotation script
+        run: python scripts/round-robin-rotation.py
+
+      - name: Commit updated rotation.json
+        run: |
+          git add jsons/rotation_members_${{ env.FILE_SUFFIX }}.json
+          git commit -m "Update rotation index"
+          git pull --rebase
+          git push
+        env:
+          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: nora-viking[bot]
+          GIT_AUTHOR_EMAIL: 156677387+nora-viking[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: nora-viking[bot]
+          GIT_COMMITTER_EMAIL: 156677387+nora-viking[bot]@users.noreply.github.com
