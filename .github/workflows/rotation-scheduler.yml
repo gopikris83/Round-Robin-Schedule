@@ -1,9 +1,9 @@
 name: Tech Lead Forum Hosting Schedule
 on:
   workflow_dispatch:
-  schedule:
+  #schedule:
     # Runs the job every Monday at 9:00 AM CET
-    - cron: "0 9 * * 1"
+    #- cron: "0 9 * * 1"
 
 env:
   # The date of the first run of the action. It has to be set to a date that is on the same weekday as the cron.

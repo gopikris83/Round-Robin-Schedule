@@ -1,9 +1,9 @@
 name: Team Devex -  Skip this week's Goalie
 on:
   workflow_dispatch:
-  schedule:
+  #schedule:
     # Runs the job every Monday at 9:00 AM CET
-    - cron: "0 8 * * 1"
+    #- cron: "0 8 * * 1"
 
 env:
   # Below are the Inputs to the Rotation schedule passed to the Python script
